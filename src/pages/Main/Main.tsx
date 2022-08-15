@@ -1,17 +1,19 @@
 import * as React from "react";
 import { useRef, useState } from "react";
-import { Button, Container, Stack, Form } from "react-bootstrap";
+import { Button, Container, Stack, Form, Breadcrumb } from "react-bootstrap";
 import { IssueContextType } from "../../models/issueModel";
 import { IssuesContext } from "../../context/IssuesContext";
 import getIssuesAPI from "../../api/getIssuesAPI";
 import getOwnerRepoDataFromURL from "../../helpers/getOwnerRepoDataFromURL";
 import DragDropContainer from "../../components/DragDropContainer";
 import setIssuesToContext from "./helpers/setIssuesToContext";
+import createRepoURL from "./helpers/createRepoURL";
 
 const Main: React.FC = (): JSX.Element => {
-  const { setIssues } = React.useContext(IssuesContext) as IssueContextType;
   const inputRef = useRef<HTMLInputElement | null>(null);
-  const [title, setTitle] = useState<string[] | null>(null);
+  const { setIssues } = React.useContext(IssuesContext) as IssueContextType;
+  const [breadCrumbs, setBreadCrumbs] = useState<string[] | null>(null);
+  const [requestURL, setRequestURL] = useState<string>("");
 
   const onSearchButtonClick = () => {
     const { current } = inputRef;
@@ -21,7 +23,8 @@ const Main: React.FC = (): JSX.Element => {
         setIssuesToContext(response, setIssues);
       });
 
-      setTitle(getOwnerRepoDataFromURL(current.value));
+      setRequestURL(current.value);
+      setBreadCrumbs(getOwnerRepoDataFromURL(current.value));
     }
   };
 
@@ -44,11 +47,14 @@ const Main: React.FC = (): JSX.Element => {
         </Button>
       </Stack>
 
-      <h4 style={{ color: "#2f80ed", height: "30px" }}>
-        {title && `${title[0]}`}
-        {title && <span style={{ color: "#000", fontWeight: 400 }}> / </span>}
-        {title && `${title[1]}`}
-      </h4>
+      <Breadcrumb>
+        {breadCrumbs &&
+          <>
+            <Breadcrumb.Item href={createRepoURL(requestURL)} target="_blank">{breadCrumbs[0]}</Breadcrumb.Item>
+            <Breadcrumb.Item href={requestURL} target="_blank">{breadCrumbs[1]}</Breadcrumb.Item>
+          </>
+        }
+      </Breadcrumb>
       <DragDropContainer />
     </Container>
   );
